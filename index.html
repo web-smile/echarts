@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html ng-app="ezApp">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no,width=device-width,height=device-height">
+	<link rel="stylesheet" href="css/bootstrap.min.css">
+	<script src="lib/echarts/echarts.js" type="text/javascript" charset="utf-8"></script>
+	<script src="lib/angular/angular.min.js"></script>
+	<script>
+		var app = angular.module("ezApp",[]);
+		app.controller("ezCtrl",function($scope,$http){
+			/*************************堆积柱状图 start*******************************/
+			$http.get("js/pagedata.txt")
+				.success(function(data){ 
+					var json = data;
+					var eachPage = 60;//一页多少条数据
+				   	var pageConts = Math.ceil(json.series.length / eachPage);
+				   	var pageArr = [];
+				   	for(var i = 0; i < pageConts; i++){
+				   		pageArr.push(i+1);
+				   	}
+					var option = {
+					    baseOption: {
+					    	animationDurationUpdate: 1000,
+    						animationEasingUpdate: 'quinticInOut',
+					        timeline: {
+					            axisType: 'category',
+					            notMerge : true,
+					            autoPlay: true,
+					            playInterval: 5000,
+					             controlStyle: {
+					                 position: 'left'
+					             },
+					            data: pageArr,
+					            label: {
+					                formatter : function(s) {
+					                    return '第' + s + '页';
+					                }
+					            }
+					        },
+					        title: {
+					            subtext: '数据来自国家统计局'
+					        },
+					        tooltip: {
+					        },
+					        legend: {
+					            x: 'right',
+					            data: ['GDP'],
+					        },
+					        calculable : true, 
+					        addDataAnimation : true,
+					        animationEasing : 'BounceOut',
+					        grid: {
+					            top: 80,
+					            bottom: 180,
+					            tooltip: {
+					                trigger: 'axis',
+					                axisPointer: {
+					                    type: 'shadow',
+					                    label: {
+					                        show: true,
+					                        formatter: function (params) {
+					                            return params.value.replace('\n', '');
+					                        }
+					                    }
+					                }
+					            }
+					        },
+					        xAxis: [
+					            {
+					                'type':'category',
+					                'axisLabel':{'interval':0},
+					                splitLine: {show: false}
+					            }
+					        ],
+					        yAxis: [
+					            {
+					                type: 'value',
+					                name: 'GDP（亿元）'
+					            }
+					        ],
+					        series: [
+					            {name: 'GDP', type: 'bar'},
+					        ]
+					    },
+					    options: function(){
+					    	var seriesDatas = [];
+					    	var pageTemp = pageArr.length; //几页
+					    	for(var i = 0 ; i < pageArr.length; i++){
+					    		var temp = {
+						            xAxis: [{
+						                        data: json.xAxis.slice(i * eachPage, i * eachPage + eachPage),
+						                        axisLabel :{
+									                formatter:function(val){
+													    return val &&  val.split("").join("\n");
+													}
+									            },
+						                    }],
+						            series: [
+						                {
+						                	data: json.series.slice(i * eachPage, i * eachPage + eachPage),
+						                	barWidth : 5,
+						                },
+						            ]
+						        }
+					    		seriesDatas.push(temp);
+					    	}
+					    	return seriesDatas;
+					    }()
+					};
+					var myChart = echarts.init(document.getElementById('diagram_echart'), {}, {width: '1000', height:'500px'});
+					myChart.setOption(option,true) ;
+				});
+
+		
+                    
+		});
+	</script>
+</head>
+<body ng-controller="ezCtrl">
+	<div id="diagram_echart"></div>
+</body>
+</html>
